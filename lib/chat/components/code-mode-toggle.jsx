@@ -243,9 +243,8 @@ function WorkspaceCommandButton({ workspaceId, diffStats, onDiffStatsRefresh }) 
         </span>
       )}
       <div className="flex items-center gap-1.5 shrink-0">
-        <span className="text-xs leading-4 px-2.5 h-[28px] flex items-center font-medium border border-border rounded-md whitespace-nowrap">
+        <span className="text-xs leading-4 px-2.5 h-[28px] flex items-center gap-1.5 font-medium border border-border rounded-md whitespace-nowrap">
           <span className="text-green-500">+{diffStats?.insertions ?? 0}</span>
-          {' '}
           <span className="text-destructive">-{diffStats?.deletions ?? 0}</span>
         </span>
         <div className="flex items-center">

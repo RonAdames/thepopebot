@@ -151,7 +151,7 @@ export function CodeModeToggle({
                       }).finally(() => setLoadingBranches(false));
                     }
                   }}
-                  triggerClassName="font-medium text-foreground hover:text-primary transition-colors cursor-pointer truncate text-xs"
+                  triggerClassName="font-medium text-foreground hover:text-primary hover:bg-accent transition-colors cursor-pointer truncate text-xs rounded px-1 -mx-1"
                   triggerLabel={<span className="truncate" title={branch}>{branch}</span>}
                 />
               </div>
@@ -174,7 +174,7 @@ export function CodeModeToggle({
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      {/* Slide toggle + label */}
+      {/* Agent / Code toggle */}
       <button
         type="button"
         onClick={handleToggle}
@@ -183,6 +183,13 @@ export function CodeModeToggle({
         aria-checked={enabled}
         aria-label="Toggle Code mode"
       >
+        {/* Agent label */}
+        <span className={cn(
+          'text-xs transition-colors',
+          !enabled ? 'font-bold text-foreground' : 'font-medium text-muted-foreground group-hover:text-foreground'
+        )}>
+          Agent
+        </span>
         {/* Track */}
         <span
           className={cn(
@@ -198,10 +205,10 @@ export function CodeModeToggle({
             )}
           />
         </span>
-        {/* Label */}
+        {/* Code label */}
         <span className={cn(
-          'text-xs font-medium transition-colors',
-          enabled ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
+          'text-xs transition-colors',
+          enabled ? 'font-bold text-foreground' : 'font-medium text-muted-foreground group-hover:text-foreground'
         )}>
           Code
         </span>

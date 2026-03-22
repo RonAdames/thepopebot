@@ -1,9 +1,9 @@
 import { createHash, timingSafeEqual } from 'crypto';
-import { createJob } from '../lib/tools/create-job.js';
+import { createAgentJob } from '../lib/tools/create-agent-job.js';
 import { setWebhook } from '../lib/tools/telegram.js';
-import { getJobStatus, fetchJobLog } from '../lib/tools/github.js';
+import { getAgentJobStatus, fetchAgentJobLog } from '../lib/tools/github.js';
 import { getTelegramAdapter } from '../lib/channels/index.js';
-import { chat, summarizeJob } from '../lib/ai/index.js';
+import { chat, summarizeAgentJob } from '../lib/ai/index.js';
 import { createNotification } from '../lib/db/notifications.js';
 import { loadTriggers } from '../lib/triggers.js';
 import { verifyApiKey } from '../lib/db/api-keys.js';
@@ -71,28 +71,34 @@ function checkAuth(routePath, request) {
 }
 
 /**
- * Extract job ID from branch name (e.g., "job/abc123" -> "abc123")
+ * Extract agent job ID from branch name (e.g., "agent-job/abc123" -> "abc123")
  */
-function extractJobId(branchName) {
-  if (!branchName || !branchName.startsWith('job/')) return null;
-  return branchName.slice(4);
+function extractAgentJobId(branchName) {
+  if (!branchName) return null;
+  if (branchName.startsWith('agent-job/')) return branchName.slice(10);
+  // Backwards compatibility with old job/ prefix
+  if (branchName.startsWith('job/')) return branchName.slice(4);
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route handlers
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function handleWebhook(request) {
+async function handleCreateAgentJob(request) {
   const body = await request.json();
   const { job } = body;
   if (!job) return Response.json({ error: 'Missing job field' }, { status: 400 });
 
   try {
-    const result = await createJob(job);
+    const result = await createAgentJob(job, {
+      llmModel: body.llm_model,
+      agentBackend: body.agent_backend,
+    });
     return Response.json(result);
   } catch (err) {
     console.error(err);
-    return Response.json({ error: 'Failed to create job' }, { status: 500 });
+    return Response.json({ error: 'Failed to create agent job' }, { status: 500 });
   }
 }
 
@@ -168,14 +174,14 @@ async function handleGithubWebhook(request) {
   }
 
   const payload = await request.json();
-  const jobId = payload.job_id || extractJobId(payload.branch);
-  if (!jobId) return Response.json({ ok: true, skipped: true, reason: 'not a job' });
+  const agentJobId = payload.agent_job_id || payload.job_id || extractAgentJobId(payload.branch);
+  if (!agentJobId) return Response.json({ ok: true, skipped: true, reason: 'not an agent job' });
 
   try {
     // Fetch log from repo via API (no longer sent in payload)
     let log = payload.log || '';
     if (!log) {
-      log = await fetchJobLog(jobId, payload.commit_sha);
+      log = await fetchAgentJobLog(agentJobId, payload.commit_sha);
     }
 
     const results = {
@@ -189,10 +195,10 @@ async function handleGithubWebhook(request) {
       commit_message: payload.commit_message || '',
     };
 
-    const message = await summarizeJob(results);
+    const message = await summarizeAgentJob(results);
     await createNotification(message, payload);
 
-    console.log(`Notification saved for job ${jobId.slice(0, 8)}`);
+    console.log(`Notification saved for agent-job ${agentJobId.slice(0, 8)}`);
 
     return Response.json({ ok: true, notified: true });
   } catch (err) {
@@ -201,15 +207,15 @@ async function handleGithubWebhook(request) {
   }
 }
 
-async function handleJobStatus(request) {
+async function handleAgentJobStatus(request) {
   try {
     const url = new URL(request.url);
-    const jobId = url.searchParams.get('job_id');
-    const result = await getJobStatus(jobId);
+    const agentJobId = url.searchParams.get('agent_job_id') || url.searchParams.get('job_id');
+    const result = await getAgentJobStatus(agentJobId);
     return Response.json(result);
   } catch (err) {
-    console.error('Failed to get job status:', err);
-    return Response.json({ error: 'Failed to get job status' }, { status: 500 });
+    console.error('Failed to get agent job status:', err);
+    return Response.json({ error: 'Failed to get agent job status' }, { status: 500 });
   }
 }
 
@@ -247,7 +253,7 @@ async function POST(request) {
 
   // Route to handler
   switch (routePath) {
-    case '/create-job':          return handleWebhook(request);
+    case '/create-agent-job':     return handleCreateAgentJob(request);
     case '/telegram/webhook':   return handleTelegramWebhook(request);
     case '/telegram/register':  return handleTelegramRegister(request);
     case '/github/webhook':     return handleGithubWebhook(request);
@@ -265,7 +271,7 @@ async function GET(request) {
 
   switch (routePath) {
     case '/ping':           return Response.json({ message: 'Pong!' });
-    case '/jobs/status':    return handleJobStatus(request);
+    case '/agent-jobs/status':  return handleAgentJobStatus(request);
     default:                return Response.json({ error: 'Not found' }, { status: 404 });
   }
 }

@@ -53,6 +53,7 @@ export function CodeModeToggle({
   onDiffStatsRefresh,
   onShowDiff,
   onWorkspaceUpdate,
+  defaultRepo,
 }) {
   const features = useFeatures();
   const [repos, setRepos] = useState([]);
@@ -79,12 +80,17 @@ export function CodeModeToggle({
         }
       }).catch(() => setLoadingRepos(false));
     }
-    if (!next) {
+    if (!next && defaultRepo) {
+      // Switching back to agent mode — restore defaults
+      onRepoChange(defaultRepo);
+      onBranchChange('main');
+      setBranches([]);
+    } else if (!next) {
       onRepoChange('');
       onBranchChange('');
       setBranches([]);
     }
-  }, [locked, enabled, reposLoaded, onToggle, onRepoChange, onBranchChange, getRepositories]);
+  }, [locked, enabled, reposLoaded, onToggle, onRepoChange, onBranchChange, getRepositories, defaultRepo]);
 
   // Load branches when repo changes
   useEffect(() => {
@@ -120,8 +126,8 @@ export function CodeModeToggle({
 
   if (!features?.codeWorkspace) return null;
 
-  // Locked mode: show branch bar with feature branch + mode toggle
-  if (locked && enabled) {
+  // Locked mode: show workspace bar whenever workspace exists (agent or code mode)
+  if (locked && workspace) {
     const featureBranch = workspace?.featureBranch;
     // Extract just the repo name (last segment of owner/repo)
     const repoName = repo ? repo.split('/').pop() : '';
@@ -130,8 +136,8 @@ export function CodeModeToggle({
       <div className="flex items-center gap-2 text-xs min-w-0 px-1 py-0.5">
         <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
           <GitBranchIcon size={12} className="shrink-0" />
-          {repoName && <span className="shrink-0 cursor-default" title={repo}>{repoName}</span>}
-          {branch && (
+          {enabled && repoName && <span className="shrink-0 cursor-default" title={repo}>{repoName}</span>}
+          {enabled && branch && (
             <>
               <span className="shrink-0 text-muted-foreground/30">/</span>
               <div className="shrink-0 max-w-[120px]">
@@ -159,7 +165,7 @@ export function CodeModeToggle({
           )}
           {featureBranch && (
             <>
-              <span className="shrink-0 text-muted-foreground/50">&larr;</span>
+              {enabled && <span className="shrink-0 text-muted-foreground/50">&larr;</span>}
               <span className="text-primary truncate min-w-[60px] cursor-default" title={featureBranch}>{featureBranch}</span>
             </>
           )}

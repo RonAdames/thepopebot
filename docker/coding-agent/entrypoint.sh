@@ -11,7 +11,7 @@ set -e
 #
 # ── REQUIRED ─────────────────────────────────────────────────────────
 #
-#   RUNTIME             job | headless | interactive | cluster-worker | command/*
+#   RUNTIME             agent-job | headless | interactive | cluster-worker | command/*
 #                       Selects the script folder: /scripts/${RUNTIME}/
 #
 #   AGENT               claude-code | pi | gemini | codex | opencode
@@ -50,13 +50,11 @@ set -e
 #   CUSTOM_API_KEY            Custom provider API key (if endpoint needs auth)
 #   CUSTOM_OPENAI_BASE_URL           Custom OpenAI-compatible endpoint URL
 #
-# ── JOB RUNTIME ──────────────────────────────────────────────────────
+# ── AGENT-JOB RUNTIME ────────────────────────────────────────────────
 #
-#   JOB_TITLE           PR title and commit message
-#   JOB_DESCRIPTION     PR body and prompt content
-#   JOB_ID              Log directory name (fallback: extracted from branch)
-#   SECRETS             JSON blob of AGENT_* secrets (from GitHub Actions)
-#   LLM_SECRETS         JSON blob of AGENT_LLM_* secrets (from GitHub Actions)
+#   AGENT_JOB_TITLE     PR title and commit message
+#   AGENT_JOB_DESCRIPTION  PR body and prompt content
+#   AGENT_JOB_ID        Log directory name (fallback: extracted from branch)
 #
 # ── INTERACTIVE RUNTIME ──────────────────────────────────────────────
 #

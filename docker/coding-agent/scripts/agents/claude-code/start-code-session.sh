@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start an extra Claude Code tab via ttyd on $PORT
+# Start a Claude Code session via ttyd on $PORT
 # Resumes the session for this port if a session file exists, otherwise starts fresh
 
 SESSION_FILE="/home/coding-agent/.claude-ttyd-sessions/${PORT}"

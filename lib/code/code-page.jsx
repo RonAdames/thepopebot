@@ -67,6 +67,14 @@ function loadTabOrder(id) {
   }
 }
 
+function saveActiveTab(id, tabId) {
+  try { localStorage.setItem(`code-active-tab-${id}`, tabId); } catch {}
+}
+
+function loadActiveTab(id) {
+  try { return localStorage.getItem(`code-active-tab-${id}`) || null; } catch { return null; }
+}
+
 function reorderByStored(tabs, storedOrder) {
   if (!storedOrder || storedOrder.length === 0) return tabs;
   const primary = tabs[0]; // claude-code always first
@@ -90,7 +98,7 @@ export default function CodePage({ session, codeWorkspaceId }) {
   const [tabs, setTabs] = useState([
     { id: PRIMARY_TAB_ID, label: 'Code', type: 'code', primary: true },
   ]);
-  const [activeTabId, setActiveTabId] = useState(PRIMARY_TAB_ID);
+  const [activeTabId, setActiveTabId] = useState(() => loadActiveTab(codeWorkspaceId) ?? PRIMARY_TAB_ID);
   const [creatingShell, setCreatingShell] = useState(false);
   const [creatingCode, setCreatingCode] = useState(false);
   const [creatingEditor, setCreatingEditor] = useState(false);
@@ -145,7 +153,12 @@ export default function CodePage({ session, codeWorkspaceId }) {
           ...editorTabs,
         ];
         const storedOrder = loadTabOrder(codeWorkspaceId);
-        setTabs(reorderByStored(restored, storedOrder));
+        const finalTabs = reorderByStored(restored, storedOrder);
+        setTabs(finalTabs);
+        const storedActiveId = loadActiveTab(codeWorkspaceId);
+        if (storedActiveId && !finalTabs.some((t) => t.id === storedActiveId)) {
+          setActiveTabId(PRIMARY_TAB_ID);
+        }
       }
     });
   }, [codeWorkspaceId]);
@@ -156,6 +169,11 @@ export default function CodePage({ session, codeWorkspaceId }) {
       saveTabOrder(codeWorkspaceId, tabs);
     }
   }, [tabs, codeWorkspaceId]);
+
+  // Persist active tab across page refreshes
+  useEffect(() => {
+    saveActiveTab(codeWorkspaceId, activeTabId);
+  }, [activeTabId, codeWorkspaceId]);
 
   // Load port forwards on mount
   useEffect(() => {
@@ -242,7 +260,11 @@ export default function CodePage({ session, codeWorkspaceId }) {
       }
     }
     setTabs((prev) => prev.filter((t) => t.id !== tabId));
-    setActiveTabId((prev) => (prev === tabId ? PRIMARY_TAB_ID : prev));
+    setActiveTabId((prev) => {
+      if (prev !== tabId) return prev;
+      const idx = tabs.findIndex((t) => t.id === tabId);
+      return (tabs[idx - 1] ?? tabs[0]).id;
+    });
   }, [codeWorkspaceId, tabs]);
 
   const handleOpenCloseDialog = useCallback(() => {

@@ -28,6 +28,7 @@ import {
   generateWebhookSecret,
   getPATCreationURL,
 } from './lib/github.mjs';
+import dotenv from 'dotenv';
 import { loadEnvFile } from './lib/env.mjs';
 import { syncConfig } from './lib/sync.mjs';
 
@@ -44,11 +45,13 @@ async function main() {
   console.log(chalk.cyan(logo));
   clack.intro('Interactive Setup Wizard');
 
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = 5;
   let currentStep = 0;
 
   // Load existing .env (always exists after init — seed .env has AUTH_SECRET etc.)
   const env = loadEnvFile();
+
+  dotenv.config();
 
   if (env) {
     clack.log.info('Existing .env detected — previously configured values can be skipped.');
@@ -428,38 +431,7 @@ async function main() {
     clack.log.info(`GitHub variables set: ${report.variables.join(', ')}`);
   }
 
-  // ─── Step 5: Build ──────────────────────────────────────────────────
-  clack.log.step(`[${++currentStep}/${TOTAL_STEPS}] Build`);
-
-  // Helper: run build with retry on failure
-  async function runBuildWithRetry() {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        execSync('npm run build', { stdio: 'inherit' });
-        clack.log.success('Build complete');
-        return true;
-      } catch {
-        if (attempt === 1) {
-          clack.log.error('Build failed.');
-          const retry = await confirm('Retry build?');
-          if (!retry) break;
-        } else {
-          clack.log.error('Build failed again.');
-        }
-      }
-    }
-    clack.log.error(
-      'Cannot continue without a successful build.\n' +
-      '  Fix the error above, then run:\n\n' +
-      '    npm run build'
-    );
-    process.exit(1);
-  }
-
-  clack.log.info('Building...');
-  await runBuildWithRetry();
-
-  // ─── Step 6: Start Server ─────────────────────────────────────────────
+  // ─── Step 5: Start Server ─────────────────────────────────────────────
   clack.log.step(`[${++currentStep}/${TOTAL_STEPS}] Start Server`);
 
   let serverRunning = false;

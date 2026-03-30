@@ -11,7 +11,7 @@ thepopebot includes these security measures by default:
 - **WebSocket authentication** — Code workspace WebSocket connections validate the session cookie.
 - **Secret filtering in Docker agent** — The `env-sanitizer` filters `AGENT_*` secrets from the LLM's bash subprocess.
 - **Auto-merge path restrictions** — `auto-merge.yml` only merges PRs where all changed files fall within `ALLOWED_PATHS` (default: `/logs`).
-- **Server Actions with session checks** — All browser-to-server mutations use `requireAuth()` session validation.
+- **Authenticated fetch route handlers** — All browser-to-server calls use `auth()` session validation.
 
 ---
 
@@ -27,7 +27,7 @@ thepopebot includes these security measures by default:
 
 ### Agent Job Secrets
 
-Agent job secrets are managed through the admin UI (Settings > Agent Jobs > Secrets). They are stored encrypted in SQLite and injected as env vars into Docker containers. The agent can discover available secrets via the `get-secret` skill.
+Agent job secrets are managed at **Admin > Event Handler > Agent Jobs**. They are stored encrypted in SQLite and injected as env vars into Docker containers. The agent can discover available secrets via the `get-secret` skill.
 
 ---
 
@@ -41,7 +41,7 @@ Keep `ALLOWED_PATHS` restrictive. Only widen it after reviewing what your agent 
 
 ## API Keys
 
-Database-backed API keys are generated through the web UI (**Settings > Secrets**). Format: `tpb_` prefix + 64 hex characters. Keys are SHA-256 hashed in the database.
+Database-backed API keys are generated at **Admin > Event Handler > Webhooks**. Format: `tpb_` prefix + 64 hex characters. Keys are SHA-256 hashed in the database.
 
 ---
 

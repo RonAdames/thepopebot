@@ -27,7 +27,7 @@ curl -X POST https://your-app-url/api/create-agent-job \
   -d '{"job": "Update the README with installation instructions"}'
 ```
 
-Generate API keys from **Settings > Secrets** in the web UI.
+Generate API keys at **Admin > Event Handler > Webhooks** in the web UI.
 
 ## Connect Telegram (Optional)
 

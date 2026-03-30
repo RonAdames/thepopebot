@@ -30,6 +30,7 @@ These ship with the package but must be activated manually:
 | Skill | Description |
 |-------|-------------|
 | `brave-search` | Web search and content extraction via Brave Search API |
+| `browser-tools` | Browser automation via Puppeteer (screenshots, navigation, interaction) |
 | `google-docs` | Create and manage Google Docs on a shared drive |
 | `google-drive` | Google Drive operations (list, upload, download, delete) |
 | `kie-ai` | AI image and video generation via kie.ai API |
@@ -102,7 +103,7 @@ If bash + curl isn't sufficient, use Node.js with a `package.json`. Dependencies
 
 ## Credential Setup
 
-If a skill needs an API key, add it via the admin UI (Settings > Agent Jobs > Secrets). The secret will be injected as an env var into Docker containers. The agent can discover available secrets via the `get-secret` skill.
+If a skill needs an API key, add it at **Admin > Event Handler > Agent Jobs**. The secret will be injected as an env var into Docker containers. The agent can discover available secrets via the `get-secret` skill.
 
 ---
 

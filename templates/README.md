@@ -30,7 +30,7 @@ An autonomous AI agent powered by [thepopebot](https://github.com/stephengpope/t
 | `config/agent-job/AGENT_JOB.md` | Agent runtime environment docs |
 | `config/CRONS.json` | Scheduled job definitions |
 | `config/TRIGGERS.json` | Webhook trigger definitions |
-| `.env` | API keys, tokens, and settings |
+| `.env` | Infrastructure settings (APP_URL, GH_OWNER, etc.) |
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the complete list.
 

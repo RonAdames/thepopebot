@@ -29,7 +29,7 @@ These set GitHub repository secrets/variables using the `gh` CLI. They read `GH_
 |---------|-------------|
 | `set-var KEY [VALUE]` | Set a GitHub repository variable |
 
-Agent job secrets are now managed through the admin UI (Settings > Agent Jobs > Secrets), stored encrypted in SQLite, and injected directly into Docker containers.
+Agent job secrets are managed at Admin > Event Handler > Agent Jobs, stored encrypted in SQLite, and injected directly into Docker containers.
 
 ## Common Workflows
 
@@ -54,6 +54,6 @@ npx thepopebot reset config/CRONS.json # accept new template
 ### Set up a new LLM provider for jobs
 ```bash
 npx thepopebot set-var LLM_PROVIDER openai
-npx thepopebot set-var LLM_MODEL gpt-4o
-# Set API keys via admin UI: Settings > Agent Jobs > Secrets
+npx thepopebot set-var LLM_MODEL gpt-5.4
+# Set API keys via admin UI: Admin > Event Handler > LLMs
 ```

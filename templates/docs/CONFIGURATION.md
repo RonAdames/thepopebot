@@ -29,33 +29,24 @@ Config markdown files support includes and built-in variables (processed by the 
 
 ---
 
-## Environment Variables
+## Configuration Storage
 
-Set in `.env` in your project root. These configure the **Event Handler** (web chat, Telegram, webhooks, job summaries).
+Most settings are stored in the SQLite database (encrypted for secrets, plaintext for config). The admin UI is the primary way to manage them.
+
+`.env` is only for infrastructure variables that must exist before the database is available:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `APP_URL` | Public URL for webhooks and Telegram | Yes |
-| `AUTH_SECRET` | NextAuth session encryption (auto-generated) | Yes |
-| `GH_TOKEN` | GitHub PAT for creating branches/files | Yes |
+| `APP_HOSTNAME` | Hostname extracted from APP_URL | Yes |
+| `AUTH_SECRET` | Session encryption + DB secret key (auto-generated) | Yes |
 | `GH_OWNER` | GitHub repository owner | Yes |
 | `GH_REPO` | GitHub repository name | Yes |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token | For Telegram |
-| `TELEGRAM_WEBHOOK_SECRET` | Telegram webhook validation secret | No |
-| `TELEGRAM_CHAT_ID` | Default chat ID for notifications | For Telegram |
-| `GH_WEBHOOK_SECRET` | GitHub Actions webhook auth | For notifications |
-| `LLM_PROVIDER` | `anthropic`, `openai`, `google`, or `custom` | No (default: `anthropic`) |
-| `LLM_MODEL` | Model name override | No |
-| `LLM_MAX_TOKENS` | Max tokens for LLM responses | No (default: 4096) |
-| `ANTHROPIC_API_KEY` | Anthropic API key | For anthropic provider |
-| `OPENAI_API_KEY` | OpenAI API key / Whisper | For openai provider |
-| `CUSTOM_OPENAI_BASE_URL` | Custom OpenAI-compatible base URL | For custom provider |
-| `GOOGLE_API_KEY` | Google API key | For google provider |
-| `CUSTOM_API_KEY` | Custom provider API key | For custom provider |
-| `AGENT_BACKEND` | Agent runner: `pi` or `claude-code` | No (default: `claude-code`) |
-| `ASSEMBLYAI_API_KEY` | API key for voice transcription | For voice input |
-| `DATABASE_PATH` | Override SQLite DB location | No |
+| `DATABASE_PATH` | Override SQLite DB location (default: `data/db/thepopebot.sqlite`) | No |
+| `LETSENCRYPT_EMAIL` | Email for Let's Encrypt HTTPS certificates | For HTTPS |
 | `COMPOSE_FILE` | Override docker-compose file | No |
+
+All other settings (API keys, LLM config, Telegram, voice, coding agents) are managed via the admin UI and stored in the database.
 
 ---
 
@@ -63,36 +54,26 @@ Set in `.env` in your project root. These configure the **Event Handler** (web c
 
 thepopebot has **two independent LLM configurations**:
 
-- **Event Handler** (chat, Telegram, webhooks, summaries) — configured via `.env`
-- **Jobs** (Docker agent on GitHub Actions) — configured via GitHub repo variables
+- **Chat** (web chat, Telegram, webhooks, summaries) — configured at Admin > Event Handler > Chat
+- **Coding Agents** (code workspaces, agent jobs) — configured at Admin > Event Handler > Coding Agents
 
-You can run different models for each. For example, Claude for interactive chat and a local Ollama model for jobs.
+You can run different models for each. Add API keys at **Admin > Event Handler > LLMs**.
 
-| Provider | Example model | API key env var |
-|----------|---------------|-----------------|
-| `anthropic` (default) | `claude-sonnet-4-20250514` | `ANTHROPIC_API_KEY` |
-| `openai` | `gpt-4o` | `OPENAI_API_KEY` |
-| `google` | `gemini-2.5-pro` | `GOOGLE_API_KEY` |
-| `custom` | Any OpenAI-compatible API | `CUSTOM_API_KEY` + `CUSTOM_OPENAI_BASE_URL` |
+### Built-in Providers
 
-### Setting the Event Handler Model
+| Provider | Default model | API key |
+|----------|---------------|---------|
+| `anthropic` (default) | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` |
+| `openai` | `gpt-5.4` | `OPENAI_API_KEY` |
+| `google` | `gemini-2.5-flash` | `GOOGLE_API_KEY` |
+| `deepseek` | `deepseek-chat` | `DEEPSEEK_API_KEY` |
+| `minimax` | `MiniMax-M2.7` | `MINIMAX_API_KEY` |
+| `mistral` | `mistral-large-latest` | `MISTRAL_API_KEY` |
+| `xai` | `grok-4.20-0309-non-reasoning` | `XAI_API_KEY` |
+| `kimi` | `kimi-k2.5` | `MOONSHOT_API_KEY` |
+| `openrouter` | (user-specified) | `OPENROUTER_API_KEY` |
 
-```bash
-# In .env
-LLM_PROVIDER=anthropic
-LLM_MODEL=claude-sonnet-4-20250514
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-Restart your server after changes.
-
-### Setting the Default Job Model
-
-```bash
-npx thepopebot set-var LLM_PROVIDER openai
-npx thepopebot set-var LLM_MODEL gpt-4o
-# Set API keys via admin UI: Settings > Agent Jobs > Secrets
-```
+Custom OpenAI-compatible providers can be added via Admin > Event Handler > LLMs. Supports multiple models, a base URL, and an optional API key (for Ollama, Together AI, LM Studio, etc.).
 
 ### Per-Job Overrides
 
@@ -105,33 +86,19 @@ Add `llm_provider` and `llm_model` to any agent-type entry in `CRONS.json` or `T
   "type": "agent",
   "job": "Review open PRs",
   "llm_provider": "openai",
-  "llm_model": "gpt-4o"
+  "llm_model": "gpt-5.4"
 }
 ```
 
-### Using the `custom` Provider
+### Local Models (Ollama, LM Studio)
 
-Point at any OpenAI-compatible endpoint (DeepSeek, Ollama, Together AI, etc.):
-
-```bash
-# Cloud custom (DeepSeek, Together AI, etc.)
-npx thepopebot set-var LLM_PROVIDER custom
-npx thepopebot set-var LLM_MODEL deepseek-chat
-npx thepopebot set-var CUSTOM_OPENAI_BASE_URL https://api.deepseek.com/v1
-# Set CUSTOM_API_KEY via admin UI: Settings > Agent Jobs > Secrets
-
-# Local custom (Ollama, LM Studio, etc.) — needs self-hosted runner
-npx thepopebot set-var RUNS_ON self-hosted
-npx thepopebot set-var LLM_PROVIDER custom
-npx thepopebot set-var LLM_MODEL qwen3:8b
-npx thepopebot set-var CUSTOM_OPENAI_BASE_URL http://host.docker.internal:11434/v1
-```
+Add a custom provider at Admin > Event Handler > LLMs with the base URL `http://host.docker.internal:11434/v1`. Containers use Docker networking to reach the host machine.
 
 ---
 
 ## Agent Job Secrets
 
-Agent job secrets are managed through the admin UI (Settings > Agent Jobs > Secrets). They are stored encrypted in SQLite and injected as env vars into Docker containers. The agent can discover available secrets via the `get-secret` skill.
+Agent job secrets are managed at **Admin > Event Handler > Agent Jobs**. They are stored encrypted in SQLite and injected as env vars into Docker containers. The agent can discover available secrets via the `get-secret` skill.
 
 ---
 
@@ -147,7 +114,7 @@ Agent job secrets are managed through the admin UI (Settings > Agent Jobs > Secr
 | `RUNS_ON` | GitHub Actions runner label | `ubuntu-latest` |
 | `LLM_PROVIDER` | LLM provider for Docker agent | `anthropic` |
 | `LLM_MODEL` | LLM model name for Docker agent | Provider default |
-| `AGENT_BACKEND` | Agent runner: `pi` or `claude-code` | `claude-code` |
+| `AGENT_BACKEND` | Agent runner: `claude-code`, `pi`, `gemini-cli`, `codex-cli`, `opencode` | `claude-code` |
 
 ---
 
@@ -172,7 +139,6 @@ Create a fine-grained PAT scoped to your repository:
 For self-hosted deployment:
 
 ```bash
-npm run build
 docker compose up -d
 ```
 

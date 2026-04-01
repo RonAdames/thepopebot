@@ -78,6 +78,13 @@ RUN useradd -m -s /bin/bash -u 1001 coding-agent \
     && chown coding-agent:coding-agent /home/coding-agent/workspace
 
 # ──────────────────────────────────────────────
+# Playwright Chrome for Testing (pre-installed for MCP)
+# ──────────────────────────────────────────────
+USER coding-agent
+RUN npx -y @playwright/mcp@0.0.70 install-browser chrome-for-testing
+USER root
+
+# ──────────────────────────────────────────────
 # Copy scripts, commands, and configs
 # ──────────────────────────────────────────────
 COPY scripts/ /scripts/

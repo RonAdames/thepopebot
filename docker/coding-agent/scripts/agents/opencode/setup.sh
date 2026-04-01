@@ -53,14 +53,14 @@ cat > "${WORKSPACE_DIR}/.opencode/opencode.jsonc" << 'EOF'
 EOF
 
 # Register Playwright MCP server for browser automation
-cat > "${WORKSPACE_DIR}/.opencode.json" << 'EOF'
+mkdir -p ~/.config/opencode
+cat > ~/.config/opencode/opencode.json << 'EOF'
 {
-  "mcpServers": {
+  "mcp": {
     "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest", "--headless", "--browser", "chromium"],
-      "env": []
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@0.0.70", "--headless", "--browser", "chromium"],
+      "enabled": true
     }
   }
 }

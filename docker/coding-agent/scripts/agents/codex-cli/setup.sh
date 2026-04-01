@@ -24,7 +24,7 @@ trust_level = "trusted"
 
 [mcp_servers.playwright]
 command = "npx"
-args = ["-y", "@playwright/mcp@latest", "--headless", "--browser", "chromium"]
+args = ["-y", "@playwright/mcp@0.0.70", "--headless", "--browser", "chromium"]
 EOF
 
 # Write the session tracking hook script (run on every SessionStart)

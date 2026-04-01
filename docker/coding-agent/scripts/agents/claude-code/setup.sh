@@ -59,7 +59,7 @@ cat > ~/.claude.json << ENDJSON
 ENDJSON
 
 # Register Playwright MCP server for browser automation
-claude mcp add --transport stdio playwright -- npx -y @playwright/mcp@latest --headless --browser chromium
+claude mcp add --transport stdio playwright -- npx -y @playwright/mcp@0.0.70 --headless --browser chromium
 
 # Activate agent-job-secrets skill when token is available (agent chat mode only)
 if [ -n "$AGENT_JOB_TOKEN" ]; then
